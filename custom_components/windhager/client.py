@@ -15,13 +15,18 @@ class WindhagerHttpClient:
         self.devices = []
 
     async def fetch(self, url):
-        client = aiohttp.ClientSession()
-        auth = DigestAuth("USER", self.password, client)
-        ret = await auth.request("GET", "http://" + self.host + "/api/1.0/lookup" + url)
-        json = await ret.json()
-
-        await client.close()
-        return json
+        try:
+            client = aiohttp.ClientSession()
+            auth = DigestAuth("USER", self.password, client)
+            ret = await auth.request("GET", "http://" + self.host + "/api/1.0/lookup" + url)
+            json = await ret.json()
+            _LOGGER.debug("Fetched data for %s: %s", url, json)
+            return json
+        except Exception as e:
+            _LOGGER.error("Failed to fetch data for %s: %s", url, str(e))
+            raise
+        finally:
+            await client.close()
 
     async def update(self, oid, value):
         client = aiohttp.ClientSession()
@@ -48,6 +53,7 @@ class WindhagerHttpClient:
                 device_id = "/1/" + str(device["nodeId"])
 
                 if "functions" not in device:
+                    _LOGGER.warning("Device %s has no functions, skipping.", device_id)
                     continue
 
                 # Filter climate controls
@@ -439,11 +445,15 @@ class WindhagerHttpClient:
 
         # Lecture de tous les OIDs trouvés
         for oid in self.oids:
-            json = await self.fetch(oid)
-            if "value" in json:
-                ret["oids"][oid] = json["value"]
-            else:
+            try:
+                json = await self.fetch(oid)
+                if "value" in json and json["value"] != "-.-":
+                    ret["oids"][oid] = json["value"]
+                else:
+                    ret["oids"][oid] = None
+                    _LOGGER.warning("Invalid or missing value for OID %s: %s", oid, json)
+            except Exception as e:
                 ret["oids"][oid] = None
-                _LOGGER.exception("Error while fetching oid %s no value detected. JSON = %s", oid, json)
+                _LOGGER.error("Error while fetching OID %s: %s", oid, str(e))
 
         return ret
