@@ -1,4 +1,5 @@
 """Support for Windhager Climate."""
+
 from __future__ import annotations
 
 import logging
@@ -6,8 +7,11 @@ from datetime import timedelta
 
 import voluptuous as vol
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (ClimateEntityFeature,
-                                                    HVACAction, HVACMode)
+from homeassistant.components.climate.const import (
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -45,8 +49,7 @@ async def async_setup_entry(
         if deviceInfo.get("type") == "climate":
             entity = WindhagerThermostatClimate(data_coordinator, deviceInfo)
             entities.append(entity)
-            entity = WindhagerThermostatClimateWithoutBias(
-                data_coordinator, deviceInfo)
+            entity = WindhagerThermostatClimateWithoutBias(data_coordinator, deviceInfo)
             entities.append(entity)
 
     # entity = WindhagerThermostatClimate(client, "/1/15")
@@ -77,9 +80,7 @@ class WindhagerThermostatClimate(CoordinatorEntity, ClimateEntity):
         self._custom_temp_remaining_time = 0
         self._attr_translation_key = "windhager_climate"
         self._device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, deviceInfo.get("device_id"))
-            },
+            identifiers={(DOMAIN, deviceInfo.get("device_id"))},
             name=deviceInfo.get("device_name"),
             manufacturer="Windhager",
             model=deviceInfo.get("device_name"),
@@ -103,29 +104,49 @@ class WindhagerThermostatClimate(CoordinatorEntity, ClimateEntity):
 
     @property
     def supported_features(self):
-        return ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+        return (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
 
     @property
     def current_temperature(self):
         try:
             return float(
-                self.coordinator.data.get("oids").get(
-                    self._prefix + "/0/0/1/0", "0")
-            ) - float(self.coordinator.data.get("oids").get(self._prefix + "/0/3/58/0", "0"))
+                self.coordinator.data.get("oids", {}).get(
+                    self._prefix + "/0/0/1/0", "0"
+                )
+            ) - float(
+                self.coordinator.data.get("oids", {}).get(
+                    self._prefix + "/0/3/58/0", "0"
+                )
+            )
         except (ValueError, TypeError):
             _LOGGER.warning(
-                "Invalid temperature value for %s, setting as None.", self._prefix)
+                "Invalid current temperature value for %s, setting as None.",
+                self._prefix,
+            )
             return None
 
     @property
     def target_temperature(self):
-        try:    
+        try:
             return float(
-                self.coordinator.data.get("oids").get(self._prefix + "/0/1/1/0")
-            ) - float(self.coordinator.data.get("oids").get(self._prefix + "/0/3/58/0"))
+                self.coordinator.data.get("oids", {}).get(
+                    self._prefix + "/0/1/1/0", "0"
+                )
+            ) - float(
+                self.coordinator.data.get("oids", {}).get(
+                    self._prefix + "/0/3/58/0", "0"
+                )
+            )
         except (ValueError, TypeError):
             _LOGGER.warning(
-                "Invalid temperature value for %s, setting as None.", self._prefix)
+                "Invalid target temperature value for %s, setting as None.",
+                self._prefix,
+            )
             return None
 
     @property
@@ -159,13 +180,35 @@ class WindhagerThermostatClimate(CoordinatorEntity, ClimateEntity):
         return self._preset_modes
 
     def raw_selected_mode(self):
-        return int(self.coordinator.data.get("oids").get(self._prefix + "/0/3/50/0"))
+        try:
+            return int(
+                self.coordinator.data.get("oids", {}).get(self._prefix + "/0/3/50/0", 0)
+            )
+        except (ValueError, TypeError):
+            _LOGGER.warning(
+                "Invalid selected mode value for %s, setting as None.", self._prefix
+            )
+            return None
 
     def raw_custom_temp_remaining_time(self):
-        return int(self.coordinator.data.get("oids").get(self._prefix + "/0/2/10/0"))
+        try:
+            return int(
+                self.coordinator.data.get("oids", {}).get(self._prefix + "/0/2/10/0", 0)
+            )
+        except (ValueError, TypeError):
+            _LOGGER.warning(
+                "Invalid custom temp remaining time for %s, setting as None.", self._prefix
+            )
+            return None
 
     def raw_preset_mode(self):
-        return int(self.coordinator.data.get("oids").get(self._prefix + "/0/3/50/0"))
+        try:
+            return int(
+                self.coordinator.data.get("oids", {}).get(self._prefix + "/0/3/50/0", 0)
+            )
+        except (ValueError, TypeError):
+            _LOGGER.warning("Invalid preset mode for %s, setting as None.", self._prefix)
+            return None
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
@@ -215,9 +258,7 @@ class WindhagerThermostatClimateWithoutBias(CoordinatorEntity, ClimateEntity):
         self._custom_temp_remaining_time = 0
         self._attr_translation_key = "windhager_climate"
         self._device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, deviceInfo.get("device_id"))
-            },
+            identifiers={(DOMAIN, deviceInfo.get("device_id"))},
             name=deviceInfo.get("device_name"),
             manufacturer="Windhager",
             model=deviceInfo.get("device_name"),
@@ -241,18 +282,24 @@ class WindhagerThermostatClimateWithoutBias(CoordinatorEntity, ClimateEntity):
 
     @property
     def supported_features(self):
-        return ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+        return (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
 
     @property
     def current_temperature(self):
         try:
             return float(
-                self.coordinator.data.get("oids").get(
-                    self._prefix + "/0/0/1/0", "0")
+                self.coordinator.data.get("oids").get(self._prefix + "/0/0/1/0", "0")
             )
         except (ValueError, TypeError):
             _LOGGER.warning(
-                "Invalid temperature value for %s, setting as None.", self._prefix)
+                "Invalid current temperature value for %s, setting as None.",
+                self._prefix,
+            )
             return None
 
     @property
@@ -263,7 +310,9 @@ class WindhagerThermostatClimateWithoutBias(CoordinatorEntity, ClimateEntity):
             )
         except (ValueError, TypeError):
             _LOGGER.warning(
-                "Invalid temperature value for %s, setting as None.", self._prefix)
+                "Invalid target temperature value for %s, setting as None.",
+                self._prefix,
+            )
             return None
 
     @property
@@ -297,13 +346,35 @@ class WindhagerThermostatClimateWithoutBias(CoordinatorEntity, ClimateEntity):
         return self._preset_modes
 
     def raw_selected_mode(self):
-        return int(self.coordinator.data.get("oids").get(self._prefix + "/0/3/50/0"))
+        try:
+            return int(
+                self.coordinator.data.get("oids", {}).get(self._prefix + "/0/3/50/0", 0)
+            )
+        except (ValueError, TypeError):
+            _LOGGER.warning(
+                "Invalid selected mode value for %s, setting as None.", self._prefix
+            )
+            return None
 
     def raw_custom_temp_remaining_time(self):
-        return int(self.coordinator.data.get("oids").get(self._prefix + "/0/2/10/0"))
+        try:
+            return int(
+                self.coordinator.data.get("oids", {}).get(self._prefix + "/0/2/10/0", 0)
+            )
+        except (ValueError, TypeError):
+            _LOGGER.warning(
+                "Invalid custom temp remaining time for %s, setting as None.", self._prefix
+            )
+            return None
 
     def raw_preset_mode(self):
-        return int(self.coordinator.data.get("oids").get(self._prefix + "/0/3/50/0"))
+        try:
+            return int(
+                self.coordinator.data.get("oids", {}).get(self._prefix + "/0/3/50/0", 0)
+            )
+        except (ValueError, TypeError):
+            _LOGGER.warning("Invalid preset mode for %s, setting as None.", self._prefix)
+            return None
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""

@@ -1,4 +1,5 @@
 """Support for Windhager Climate."""
+
 from __future__ import annotations
 import logging
 
@@ -57,9 +58,7 @@ class WindhagerTemperatureSensor(CoordinatorEntity, SensorEntity):
         self._oid = device_info.get("oid")
         self._correction_oid = device_info.get("correction_oid")
         self._device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, device_info.get("device_id"))
-            },
+            identifiers={(DOMAIN, device_info.get("device_id"))},
             name=device_info.get("device_name"),
             manufacturer="Windhager",
             model=device_info.get("device_name"),
@@ -82,16 +81,24 @@ class WindhagerTemperatureSensor(CoordinatorEntity, SensorEntity):
         return self._device_info
 
     @property
-    def native_value(self):
-        oid_value = self.coordinator.data.get("oids").get(self._oid)
-
-        if oid_value is None:
+    def native_value(self) -> float | None:
+        try:
+            oid_value = self.coordinator.data.get("oids").get(self._oid)
+            ret = float(oid_value)
+        except (ValueError, TypeError):
+            _LOGGER.warning("Invalid value for sensor %s, setting as None", self._oid)
             return None
 
-        ret = float(oid_value)
-
-        if self._correction_oid is not None:
-            ret -= float(self.coordinator.data.get("oids").get(self._correction_oid))
+        try:
+            if self._correction_oid is not None:
+                ret -= float(
+                    self.coordinator.data.get("oids").get(self._correction_oid)
+                )
+        except (ValueError, TypeError):
+            _LOGGER.warning(
+                "Invalid native value for sensor %s, setting as None", self._correction_oid
+            )
+            return None
 
         return ret
 
@@ -110,9 +117,7 @@ class WindhagerGenericSensor(CoordinatorEntity, SensorEntity):
         self._unit = device_info.get("unit")
         self._oid = device_info.get("oid")
         self._device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, device_info.get("device_id"))
-            },
+            identifiers={(DOMAIN, device_info.get("device_id"))},
             name=device_info.get("device_name"),
             manufacturer="Windhager",
             model=device_info.get("device_name"),
@@ -160,9 +165,7 @@ class WindhagerPelletSensor(CoordinatorEntity, SensorEntity):
         self._oid = device_info.get("oid")
         self._state_class = device_info.get("type")
         self._device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, device_info.get("device_id"))
-            },
+            identifiers={(DOMAIN, device_info.get("device_id"))},
             name=device_info.get("device_name"),
             manufacturer="Windhager",
             model=device_info.get("device_name"),
@@ -206,9 +209,7 @@ class WindhagerSelectSensor(CoordinatorEntity, SensorEntity):
         self._oid = device_info.get("oid")
         self._options = device_info.get("options")
         self._device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, device_info.get("device_id"))
-            },
+            identifiers={(DOMAIN, device_info.get("device_id"))},
             name=device_info.get("device_name"),
             manufacturer="Windhager",
             model=device_info.get("device_name"),
@@ -227,20 +228,19 @@ class WindhagerSelectSensor(CoordinatorEntity, SensorEntity):
         return self._device_info
 
     @property
-    def raw_value(self):
-        oid_value = self.coordinator.data.get("oids").get(self._oid)
-
-        if oid_value is None:
+    def raw_value(self) -> int | None:
+        try:
+            oid_value = self.coordinator.data.get("oids").get(self._oid)
+            return int(oid_value)
+        except (AttributeError, ValueError, TypeError):
+            _LOGGER.warning("Invalid raw value for sensor %s, setting as None", self._oid)
             return None
 
-        return int(oid_value)
-
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         try:
             oid_value = self.coordinator.data.get("oids").get(self._oid)
             return float(oid_value)
         except (ValueError, TypeError):
-            _LOGGER.warning("Invalid value for sensor %s: %s",
-                            self._oid, oid_value)
+            _LOGGER.warning("Invalid native value for sensor %s, setting as None", self._oid)
             return None
