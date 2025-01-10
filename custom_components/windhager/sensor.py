@@ -241,5 +241,6 @@ class WindhagerSelectSensor(CoordinatorEntity, SensorEntity):
             oid_value = self.coordinator.data.get("oids").get(self._oid)
             return float(oid_value)
         except (ValueError, TypeError):
-            _LOGGER.warning("Invalid value for sensor %s: %s", self._oid, oid_value)
+            _LOGGER.warning("Invalid value for sensor %s: %s",
+                            self._oid, oid_value)
             return None

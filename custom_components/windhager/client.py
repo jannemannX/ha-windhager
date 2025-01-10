@@ -34,7 +34,8 @@ class WindhagerHttpClient:
         await auth.request(
             "PUT",
             "http://" + self.host + "/api/1.0/datapoint",
-            data=bytes('{"OID":"' + oid + '","value":"' + value + '"}', "utf-8"),
+            data=bytes(
+                '{"OID":"' + oid + '","value":"' + value + '"}', "utf-8"),
         )
         await client.close()
 
@@ -53,7 +54,8 @@ class WindhagerHttpClient:
                 device_id = "/1/" + str(device["nodeId"])
 
                 if "functions" not in device:
-                    _LOGGER.warning("Device %s has no functions, skipping.", device_id)
+                    _LOGGER.warning(
+                        "Device %s has no functions, skipping.", device_id)
                     continue
 
                 # Filter climate controls
@@ -451,7 +453,8 @@ class WindhagerHttpClient:
                     ret["oids"][oid] = json["value"]
                 else:
                     ret["oids"][oid] = None
-                    _LOGGER.warning("Invalid or missing value for OID %s: %s", oid, json)
+                    _LOGGER.warning(
+                        "Invalid or missing value for OID %s: %s", oid, json)
             except Exception as e:
                 ret["oids"][oid] = None
                 _LOGGER.error("Error while fetching OID %s: %s", oid, str(e))

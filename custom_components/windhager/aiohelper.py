@@ -2,7 +2,6 @@
 
 import hashlib
 import os
-import re
 import time
 from yarl import URL
 
@@ -87,10 +86,12 @@ class DigestAuth:
             headers = {}
 
         # Save the args so we can re-run the request
-        self.args = {"method": method, "url": url, "headers": headers, "kwargs": kwargs}
+        self.args = {"method": method, "url": url,
+                     "headers": headers, "kwargs": kwargs}
 
         if self.challenge:
-            headers[hdrs.AUTHORIZATION] = self._build_digest_header(method.upper(), url)
+            headers[hdrs.AUTHORIZATION] = self._build_digest_header(
+                method.upper(), url)
 
         response = await self.session.request(method, url, headers=headers, **kwargs)
 
@@ -113,7 +114,8 @@ class DigestAuth:
         opaque = self.challenge.get("opaque")
 
         if qop and not (qop == "auth" or "auth" in qop.split(",")):
-            raise client_exceptions.ClientError("Unsupported qop value: %s" % qop)
+            raise client_exceptions.ClientError(
+                "Unsupported qop value: %s" % qop)
 
         # lambdas assume digest modules are imported at the top level
         if algorithm == "MD5" or algorithm == "MD5-SESS":

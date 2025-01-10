@@ -14,14 +14,14 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# For your initial PR, limit it to 1 platform.
 PLATFORMS: list[str] = ["climate", "sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up heater from a config entry."""
     hass.data[DOMAIN] = {}
-    httpClient = WindhagerHttpClient(entry.data.get("host"), entry.data.get("password"))
+    httpClient = WindhagerHttpClient(
+        entry.data.get("host"), entry.data.get("password"))
 
     async def async_update_data():
         """Fetch data from API endpoint.

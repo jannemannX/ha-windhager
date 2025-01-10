@@ -1,34 +1,19 @@
 """Support for Windhager Climate."""
 from __future__ import annotations
-from datetime import timedelta
+
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
-from homeassistant.helpers import (
-    entity_platform,
-)
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-)
-
-
-from homeassistant.const import (
-    UnitOfTemperature,
-    ATTR_TEMPERATURE,
-)
-
-from homeassistant.components.climate.const import (
-    ClimateEntityFeature,
-    HVACAction,
-    HVACMode,
-)
-
-from homeassistant.components.climate import (
-    ClimateEntity,
-)
+from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate.const import (ClimateEntityFeature,
+                                                    HVACAction, HVACMode)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import DOMAIN
 
@@ -60,7 +45,8 @@ async def async_setup_entry(
         if deviceInfo.get("type") == "climate":
             entity = WindhagerThermostatClimate(data_coordinator, deviceInfo)
             entities.append(entity)
-            entity = WindhagerThermostatClimateWithoutBias(data_coordinator, deviceInfo)
+            entity = WindhagerThermostatClimateWithoutBias(
+                data_coordinator, deviceInfo)
             entities.append(entity)
 
     # entity = WindhagerThermostatClimate(client, "/1/15")
@@ -123,10 +109,12 @@ class WindhagerThermostatClimate(CoordinatorEntity, ClimateEntity):
     def current_temperature(self):
         try:
             return float(
-                self.coordinator.data.get("oids").get(self._prefix + "/0/0/1/0", "0")
+                self.coordinator.data.get("oids").get(
+                    self._prefix + "/0/0/1/0", "0")
             ) - float(self.coordinator.data.get("oids").get(self._prefix + "/0/3/58/0", "0"))
         except ValueError:
-            _LOGGER.warning("Invalid temperature value for %s, setting as None.", self._prefix)
+            _LOGGER.warning(
+                "Invalid temperature value for %s, setting as None.", self._prefix)
             return None
 
     @property
