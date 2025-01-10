@@ -245,11 +245,26 @@ class WindhagerThermostatClimateWithoutBias(CoordinatorEntity, ClimateEntity):
 
     @property
     def current_temperature(self):
-        return float(self.coordinator.data.get("oids").get(self._prefix + "/0/0/1/0"))
+        try:
+            return float(
+                self.coordinator.data.get("oids").get(
+                    self._prefix + "/0/0/1/0", "0")
+            )
+        except (ValueError, TypeError):
+            _LOGGER.warning(
+                "Invalid temperature value for %s, setting as None.", self._prefix)
+            return None
 
     @property
     def target_temperature(self):
-        return float(self.coordinator.data.get("oids").get(self._prefix + "/0/1/1/0"))
+        try:
+            return float(
+                self.coordinator.data.get("oids").get(self._prefix + "/0/1/1/0")
+            )
+        except (ValueError, TypeError):
+            _LOGGER.warning(
+                "Invalid temperature value for %s, setting as None.", self._prefix)
+            return None
 
     @property
     def target_temperature_step(self):
